@@ -5,6 +5,8 @@ import dk.sdu.mmmi.controleum.api.moea.Solution;
 import dk.sdu.mmmi.controleum.control.commons.AbstractConcern;
 import dk.sdu.mmmi.controleum.output.DoubleOutput;
 import static java.lang.Math.pow;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * f2 = (x-2)^2 + 20;
@@ -13,7 +15,6 @@ import static java.lang.Math.pow;
  */
 public class ConcernB extends AbstractConcern {
 
-           
     public ConcernB(String name, ControlDomain controlDomain, int priority) {
         super(name, controlDomain, priority);
     }
@@ -21,7 +22,10 @@ public class ConcernB extends AbstractConcern {
     @Override
     public double evaluate(Solution option) {
         double x = option.getValue(DoubleOutput.class);
-        return pow(x - 2, 2) + 20;
+
+        BigDecimal d = new BigDecimal(pow(x - 2, 2) + 20);
+
+        return d.setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 
 }

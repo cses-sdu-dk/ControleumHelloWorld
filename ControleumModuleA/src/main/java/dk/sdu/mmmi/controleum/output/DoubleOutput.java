@@ -1,10 +1,12 @@
 package dk.sdu.mmmi.controleum.output;
 
 import dk.sdu.mmmi.controleum.api.core.ControlDomain;
-import static dk.sdu.mmmi.controleum.api.moea.utils.BitSetUtil.bitSetToDouble;
-import static dk.sdu.mmmi.controleum.api.moea.utils.BitSetUtil.doubleToBitSet;
 import dk.sdu.mmmi.controleum.control.commons.AbstractOutput;
 import static dk.sdu.mmmi.controleum.control.commons.AbstractOutput.R;
+import java.math.BigDecimal;
+import static java.math.BigDecimal.*;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.BitSet;
 import java.util.Date;
 
@@ -12,12 +14,11 @@ import java.util.Date;
  * 
  * @author jcs
  */
-public class DoubleOutput extends AbstractOutput<Integer>{
+public class DoubleOutput extends AbstractOutput<Double> {
     
-    private final static int DELTA = 1;
-    private static final int MAX_VALUE = 10;
-    private static final int MIN_VALUE = -10;
-    private final int bitSize = 32;
+    private final static BigDecimal DELTA = valueOf(1.0);
+    private static final BigDecimal MAX_VALUE = valueOf(10);
+    private static final BigDecimal MIN_VALUE = valueOf(-10);
 
     
     public DoubleOutput(String name, ControlDomain g) {
@@ -25,34 +26,38 @@ public class DoubleOutput extends AbstractOutput<Integer>{
     }
 
     @Override
-    public Integer getRandomValue(Date t) {        
-        return R.nextInt(11); // [-10;10]
+    public Double getRandomValue(Date t) {
+        double r = R.nextDouble() * (R.nextBoolean() ? 10.0 : -10.0);
+        BigDecimal bd = new BigDecimal(r);
+
+        return bd.setScale(1, RoundingMode.HALF_UP).doubleValue(); // [-10;10]
     }
 
     @Override
-    public Integer getMutatedValue(Integer v) {
-        Integer m;
+    public Double getMutatedValue(Double v) {
+        BigDecimal m = new BigDecimal(BigInteger.ZERO);
+        BigDecimal val = new BigDecimal(v);
 
         boolean positive = R.nextBoolean();
         // [-1;1]
         if (positive) {
-            m = v + DELTA;
+            m = val.add(DELTA);
         } else {
-            m = v - DELTA;
+            m = val.subtract(DELTA);
         }
 
         // Border cases
-        if (m > MAX_VALUE) {
+        if (m.doubleValue() > MAX_VALUE.doubleValue()) {
             m = MAX_VALUE;
-        } else if (m < MIN_VALUE) {
+        } else if (m.doubleValue() < MIN_VALUE.doubleValue()) {
             m = MIN_VALUE;
         }
 
-        return m;      
+        return m.setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 
     @Override
-    public void doCommitValue(Date t, Integer result) { 
+    public void doCommitValue(Date t, Double result) {
         
         // TODO: Extension point for writing out the selected solution output value after each epoch.
     }
